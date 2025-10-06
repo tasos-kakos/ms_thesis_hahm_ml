@@ -52,12 +52,26 @@ Detailed description of the sample generation process used, cannot be provided p
 <br>It can, however, be stated that ATHENA was used to extract ntuples of simulated HAHM and muon-gun data and ATLAS Run3 data were used to infuse background noise.</br>
 
 ## Step 2: Data processing
-After obtaining the raw `.root` files containing HAHM, muon-gun or real background data one may proceed with the data processing and formatting to be used by the ML models.
+After obtaining the raw `.root` files containing HAHM, muon-gun or real background data one may proceed with the data processing and formatting to be used by the ML models. First, one needs to pass the `.root` files through the dumper scripts. An example usage of the dumper scripts would be:
+- For the HAHM process data:<br>```python MdtNtupleDumper_sim.py --input my_HAHM_input.root --output my_HAHM_output.h5```</br>
+- For the muon-gun data:<br>```python MdtNtupleDumper_sim.py --input my_mg_input.root --output my_mg_output.h5 --mask_photon```</br>
+- For the real background data:<br>```python MdtNtupleDumper_muonTester.py --input my_bg_input.root --output my_bg_output.h5```</br>
+
+With the `.h5` data files at hand, one may proceed with data preprocessing.
 
 ### CNN preprocessing
-The input images for the CNN models are representations of the MDT chambers in a specific $η$ region, one $φ$ sector and a specific barrel station, where one pixel corresponds to a single MDT for a single event.
-The overall shape of the arrays containing the images is $(N, Nlayers,Ntubes,1)$, where $N$ is the number of event images, $N_{layers}$ is the number of total tube layers found in an MDT chamber of the region, $N_{tubes}$ is the total number of tubes found in the $η$ region covered and the final 1 refers to the nummber of channels (features), which for clarity can either be the drift distance values of the initial ionizing particle hitting an MDT, the displacement values, if a hit originates from a displaced muon or the target labels, i.e. "1 - muon" or "0 - not muon".
+The input images for the CNN models are representations of the MDT chambers in a specific $η$ region (either positive or negative $η$ stations), one $φ$ sector and a specific barrel station, where one pixel corresponds to a single MDT for a single event.
+The overall shape of the arrays containing the images is $(N, Nlayers, Ntubes, 1)$, where $N$ is the number of event images, $N_{layers}$ is the number of total tube layers found in an MDT chamber of the region, $N_{tubes}$ is the total number of tubes found in the $η$ region covered and the final 1 refers to the nummber of channels (features), which for clarity can either be the drift distance values of the initial ionizing particle hitting an MDT, the displacement values, if a hit originates from a displaced muon or the target labels, i.e. "1 - muon" or "0 - not muon".
 
-![An example CNN input image (visualized) would look as such:]{MDT_BMS_mZd400_avgtau25_event_image435.png} 
+![An example CNN input image (visualized) would look as such:](MDT_BMS_mZd400_avgtau25_event_image435.png)
 
+An example command to build the CNN images of a selected `.h5` data sample would be:
+```bash
+   python preprocess_CNNsample.py --input my_HAHM_input.h5 --output my_images_output.npz --background my_bg_input.h5 --muon_gun my_mg_input.h5 --format s --phi_stations 1 2 3 4 5 8 
+```
+The command above produces images in a single $η$ station `--format s` (there is also an option for images across either the full positive or either the full negative $η$ range, option `h`) and loops over $φ$ stations 1, 2, 3, 4, 5, 8 (`--phi_stations 1 2 3 4 5 8`). There are extra arguments to be passed if one is willing to do so for more specific configuration, however if not done so, the default values will automatically be picked up by the script. The extra arguments are:
+- `--numbarrel` $\rightarrow$ determines the barrel station and default is `3` (0 - BIS, 1 - BIL, 2 - BMS, 3 - BML, 4 - BIL,5 - BIS).
+- `--ratio` $\rightarrow$ determines the ratio $\frac{N_{S}}{N_{S} + N_{B}}$ of the dataset, where $N_{S}$ is the number of images containing (displaced) muon hits and $N_{B}$ is the number of images labelled exclusively with 0 values. Default is `0.5`.
+- `--eta_pos` $\rightarrow$ determines whether to produce images of only positive or only negative $η$ stations (1 - only positive, 2 - only negative). Default is `1`.
+- `--label_single` $\rightarrow$ determines whether to also label hits from prompt muons (task dependent). If not called, defaults to `False`.
 
