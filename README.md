@@ -69,9 +69,70 @@ An example command to build the CNN images of a selected `.h5` data sample would
 ```bash
    python preprocess_CNNsample.py --input my_HAHM_input.h5 --output my_images_output.npz --background my_bg_input.h5 --muon_gun my_mg_input.h5 --format s --phi_stations 1 2 3 4 5 8 
 ```
-The command above produces images in a single $η$ station `--format s` (there is also an option for images across either the full positive or either the full negative $η$ range, option `h`) and loops over $φ$ stations 1, 2, 3, 4, 5, 8 (`--phi_stations 1 2 3 4 5 8`). There are extra arguments to be passed if one is willing to do so for more specific configuration, however if not done so, the default values will automatically be picked up by the script. The extra arguments are:
+The command above produces images in a single $η$ station `--format s` (there is also an option for images across either the full positive or either the full negative $η$ range, option `h`) and loops over $φ$ stations 1, 2, 3, 4, 5, 8 (`--phi_stations 1 2 3 4 5 8`). There are additional arguments to be passed if one is willing to do so for more specific configuration, however if not done so, the default values will automatically be picked up by the script. The extra arguments are:
 - `--numbarrel` $\rightarrow$ determines the barrel station and default is `3` (0 - BIS, 1 - BIL, 2 - BMS, 3 - BML, 4 - BIL,5 - BIS).
 - `--ratio` $\rightarrow$ determines the ratio $\frac{N_{S}}{N_{S} + N_{B}}$ of the dataset, where $N_{S}$ is the number of images containing (displaced) muon hits and $N_{B}$ is the number of images labelled exclusively with 0 values. Default is `0.5`.
 - `--eta_pos` $\rightarrow$ determines whether to produce images of only positive or only negative $η$ stations (1 - only positive, 2 - only negative). Default is `1`.
 - `--label_single` $\rightarrow$ determines whether to also label hits from prompt muons (task dependent). If not called, defaults to `False`.
 
+### RNN preprocessing
+The RNN input was chosen to consist of information regarding the tube, as well as a feature according to the use of that input, i.e. driift distance, label or displacement value corresponding to each recorded hit. Each input example corresponds to a single event and includes the information (tube, feature value) from all 20 MDT layers $(BI + BM + BO \equiv 8 + 6 + 6 = 20)$, one $φ$ sector and one $η$ station. Up to 5 hits were recorded per tube layer and all data were ordered chronologically, so as to take advantage of the capability of the RNN to extract information from sequential data.
+
+![A visualization of an RNN input in the form of an image would look like this:](RNN_event_structure_13.png)
+
+An example command to build the RNN input of a selected `.h5` data sample would be:
+```bash
+   python preprocess_RNNsample.py --input my_HAHM_input.h5 --output my_RNN_data_output.npz --background my_bg_input.h5 my_mg_input.h5
+```
+
+The command above produces RNN input data given an HAHM process sample, a backround sample and a muon gun sample with prompt muon hits. There are additional (optional arguments), such as `--ratio`, which works identically to that of of the CNN script and<br>`--excludeprompt` to prevent labelling of prompt muons as 1.</br>
+
+## Step 3: Input data visualization (optional, but recommended):
+After obtaining the inputs for the ML models, one could proceed with a visualization to ensure inputs are of proper shape and contain information that reflects their data.
+
+This can be done by running the `CNN_image_plotting.py` script and specifying the dark photon mass in GeV, as well as its average lifetime in mm (according to the sample). An example usage would be:
+```bash
+   python CNN_image_plotting.py --input my_CNN_input.npz --mass 0.4 --lifetime 25
+```
+There are two additional (optional) arguments to be passed: `--events`, a list of event images that one wants to save in `.png` format, and `--num_graphs` which determines the number of graphs (images) to be plotted.
+
+## Step 4: Neural network training and testing
+After obtaining the neural network inputs, one can tune the `CNN.py` and `RNN.py` scripts according to their needs, train and test their algorithms. There is also an option to apply a displacement threshold cut, in case one wants to restrict the analysis on displacement values above the threshold value. This option is exclusive to the CNN. The threshold cut for the RNN is applied when choosing to exclude prompt muon labelling during preprocessing.
+
+To train and test a CNN, while also saving the trained model, one can run:
+
+```bash
+   python CNN.py --input my_CNN_input.npz --model my_CNN_model.h5 --output my_CNN_results.npz
+```
+The additional (optional) and task dependent tasks are:
+- `--threshold` $\rightarrow$ determines the displacement threshold value in mm
+- `--numbarrel` $\rightarrow$ determines the barrel station similar to the `preprocess_CNNsample.py` script. Default is `3`.
+- `--ratio` $\rightarrow$ determines the $\frac{N_{S}}{N_{S} + N_{B}}$ ratio similar to the `preprocess_CNNsample.py` script. Default is `0.75`.
+
+To train and test an RNN, while also saving the trained model, one can run:
+
+```bash
+   python RNN.py --input my_RNN_input.npz --model my_RNN_model.h5 --output my_RNN_results.npz
+```
+
+The RNN script automatically plots and saves some evaluation plots to inspect model performance.
+
+To evaluate the performance of the CNN, one can run the `Plot_CNN_results.py` using as input the `my_CNN_results.npz` file obtained from the `CNN.py` script and passing as arguments the sample parameters (mass, lifetime etc.).
+```bash
+   python Plot_CNN_results.py --input my_CNN_results.npz --mass <dark_photon_mass_in_GeV> --lifetime <dark_photon_average_lifetime> 
+```
+Step 5: HLS conversion
+
+To convert the trained model to the HLS version run the corresponding HLS script using as input a separate validation `.npz` data file, as well as the trained Keras model `.h5` file. The output is the results of the converted model on the validation dataset.
+
+CNN example:
+```bash
+   python hls_CNN.py --input my_CNN_validation.npz --model my_CNN_model.h5 --output my_hls_CNN_results.npz
+```
+
+RNN example:
+```bash
+   python hls_RNN.py --input my_RNN_validation.npz --model my_RNN_model.h5 --output my_hls_RNN_results.npz
+```
+
+Thanks for your time. Hope you find this repo useful!
