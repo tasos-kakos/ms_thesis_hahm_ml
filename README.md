@@ -105,7 +105,7 @@ To train and test a CNN, while also saving the trained model, one can run:
    python CNN.py --input my_CNN_input.npz --model my_CNN_model.h5 --output my_CNN_results.npz
 ```
 The additional (optional) and task dependent tasks are:
-- `--threshold` $\rightarrow$ determines the displacement threshold value in mm
+- `--threshold` $\rightarrow$ determines the displacement threshold value in mm. Default is `0`.
 - `--numbarrel` $\rightarrow$ determines the barrel station similar to the `preprocess_CNNsample.py` script. Default is `3`.
 - `--ratio` $\rightarrow$ determines the $\frac{N_{S}}{N_{S} + N_{B}}$ ratio similar to the `preprocess_CNNsample.py` script. Default is `0.75`.
 
