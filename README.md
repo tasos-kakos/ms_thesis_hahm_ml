@@ -122,7 +122,7 @@ To evaluate the performance of the CNN, one can run the `Plot_CNN_results.py` us
 ```bash
    python Plot_CNN_results.py --input my_CNN_results.npz --mass <dark_photon_mass_in_GeV> --lifetime <dark_photon_average_lifetime> 
 ```
-Step 5: HLS conversion
+## Step 5: HLS conversion
 
 To convert the trained model to the HLS version run the corresponding HLS script using as input a separate validation `.npz` data file, as well as the trained Keras model `.h5` file. The output is the results of the converted model on the validation dataset.
 
