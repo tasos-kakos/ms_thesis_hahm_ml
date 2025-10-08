@@ -303,8 +303,9 @@ if __name__ == "__main__":
 
     if remove_prompt:
         events, events_labels, plot_labels, eta_station, phi_sector, event_number, eta_region_id, displacement = muongun_cleaner(events, events_labels, plot_labels, eta_station, phi_sector, event_number, eta_region_id, displacement, target_ratio)
-    
-    print("Downsampled images shape: ", events.shape)
+
+    if threshold != 0 or remove_prompt == True:
+        print("Downsampled images shape: ", events.shape)
     
     input_shape = events.shape[1:]
     
@@ -362,7 +363,8 @@ if __name__ == "__main__":
                                    reduce_lr,
                                    scheduler
                                    ])
-    model.save(args.model)
+    if args.model != "":
+        model.save(args.model)
     
     predictions = model.predict(X_test_norm)
     predictions = np.squeeze(predictions, axis=-1)
