@@ -76,7 +76,7 @@ The command above produces images in a single $η$ station `--format s` (there i
 - `--label_single` $\rightarrow$ determines whether to also label hits from prompt muons (task dependent). If not called, defaults to `False`.
 
 ### RNN preprocessing
-The RNN input was chosen to consist of information regarding the tube, as well as a feature according to the use of that input, i.e. driift distance, label or displacement value corresponding to each recorded hit. Each input example corresponds to a single event and includes the information (tube, feature value) from all 20 MDT layers $(BI + BM + BO \equiv 8 + 6 + 6 = 20)$, one $φ$ sector and one $η$ station. Up to 5 hits were recorded per tube layer and all data were ordered chronologically, so as to take advantage of the capability of the RNN to extract information from sequential data.
+The RNN input was chosen to consist of information regarding the tube, as well as a feature according to the use of that input, i.e. driift distance, label or displacement value corresponding to each recorded hit. Each input example corresponds to a single event and includes the information (tube, feature value) from all 20 MDT layers $(\text{BI} + \text{BM} + \text{BO} \equiv 8 + 6 + 6 = 20)$, one $φ$ sector and one $η$ station. Up to 5 hits were recorded per tube layer and all data were ordered chronologically, so as to take advantage of the capability of the RNN to extract information from sequential data.
 
 ![A visualization of an RNN input in the form of an image would look like this:](RNN_event_structure_13.png)
 
