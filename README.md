@@ -108,6 +108,7 @@ The additional (optional) and task dependent tasks are:
 - `--threshold` $\rightarrow$ determines the displacement threshold value in mm. Default is `0`.
 - `--numbarrel` $\rightarrow$ determines the barrel station similar to the `preprocess_CNNsample.py` script. Default is `3`.
 - `--ratio` $\rightarrow$ determines the $\frac{N_{S}}{N_{S} + N_{B}}$ ratio similar to the `preprocess_CNNsample.py` script. Default is `0.75`.
+- `--remove_prompt` $\rightarrow$ If `True`, prompt muon hits are removed from the data. Default is `False`.
 
 To train and test an RNN, while also saving the trained model, one can run:
 
