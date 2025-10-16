@@ -3,6 +3,20 @@ import numpy as np
 import argparse
 import copy
 
+def layer_rate(image):
+    """
+    Create an array containing the number of hits per layer for the given image
+    """
+    barrel_index = args.numbarrel
+    if barrel_index > 1:
+        n_layers = 6
+    else:
+        n_layers = 8
+    hits_per_layer = np.zeros(n_layers, dtype=int)
+    for layer in range(n_layers):
+        hits_per_layer[layer] = np.sum(image[layer] == 1)
+    return hits_per_layer
+
 # loading hdf5 file data
 def load_data_from_hdf5(file_name, barrel_index):
     """
