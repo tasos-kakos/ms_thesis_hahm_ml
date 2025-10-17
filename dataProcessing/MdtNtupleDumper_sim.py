@@ -212,13 +212,13 @@ def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOne
         for name in event_variables:
             name_dict = name.split("_")[-1]
             values = data[name][i]
-            if type(values) == cppyy.gbl.ROOT.VecOps.RVec['signed char']:
+            if type(values) == type(data['MdtSimHits_stationEta'][i]):
                 try:
                     arr_values = np.array(list(values), dtype=np.int8)
                 except TypeError as err:
                     arr_values = rvec_signedchar_to_numpy(values)
                 values = arr_values.tolist()
-            if type(values) == cppyy.gbl.ROOT.VecOps.RVec['unsigned char']:
+            if type(values) == type(data['MdtSimHits_stationIndex'][i]):
                 values = values.view(np.uint8)
             if onlyOneSector:
                 filtered_values = np.asarray(values)[final_mask]
