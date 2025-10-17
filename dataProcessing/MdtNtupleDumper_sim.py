@@ -1,4 +1,5 @@
 import ROOT
+ROOT.gSystem.Load('libRVecSignedChar.so') # Load necessary RVec dictionaries
 import numpy as np
 import h5py
 import sys
@@ -31,6 +32,26 @@ class MdtDigitizationTool:
         interp_function = interp1d(distances, times, kind='linear', fill_value='extrapolate')
         timesDrift = interp_function(distancesDrift)
         return timesDrift
+
+def rvec_signedchar_to_numpy(rvec):
+    """
+    Convert ROOT::VecOps::RVec<signed char> to numpy int8. 
+    Used for muon gun sample data conversion.     
+    """
+    n = len(rvec)
+    arr = []
+    for i in range(n):
+        v = rvec[i]
+        if isinstance(v, (bytes, bytearray)):
+            # interpret raw byte
+            arr.append(int(np.int8(v[0])))
+        elif isinstance(v, str):
+            # take char code, then cast to int8
+            arr.append(int(np.int8(ord(v))))
+        else:
+            # already a number
+            arr.append(int(np.int8(v)))
+    return np.array(arr, dtype=np.int8)
 
 def save_events_to_hdf5(events, file_name):
     with h5py.File(file_name, 'w') as h5file:
@@ -107,29 +128,7 @@ def getTubeFromCenter(tubeNumber, stationIndex, stationPhi, stationEta):
     centeredTube = tubeNumber - center
     return centeredTube
 
-
-def downsample(events, ratio):
-    muon_array = []
-    for i in range(len(events)):
-        muon_array.append(events[i]['isMuon'][()])
-    summed_labels = np.array([np.sum(muon_array[j]) for j in range(len(muon_array))])
-    nb_muons = (summed_labels >= 1).sum()
-    current_ratio = nb_muons/len(muon_array)
-
-    if current_ratio >= ratio: # Return if current ratio is higher than what is demanded
-        print("Current ratio - ", current_ratio)
-        return events
-    muons = events[summed_labels>=1]
-    non_muons = events[summed_labels==0]
-    new_non_muon_number = np.floor((1-ratio)*len(muons)/ratio).astype(int)
-    new_non_muons = non_muons[:new_non_muon_number]
-    new_events = np.concatenate((muons,new_non_muons))
-    randomize_events = np.random.permutation(len(new_events))
-    new_events_shuffled = new_events[randomize_events]
-    return new_events
-
-file_path = '/afs/cern.ch/user/m/mcarnesa/work/test12/local/MuonSimHitNtuple_partGun3.root'
-def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOneSector=True, dark_photon_mask=False):
+def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOneSector=True, dark_photon_mask=True):
     tree_name = 'MuonHitTest'
     vector_names = [
         'MdtSimHits_multiLayer', 'MdtSimHits_stationEta', 'MdtSimHits_stationPhi', 'MdtSimHits_stationIndex',
@@ -141,7 +140,7 @@ def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOne
         'RpcSimHits_doubletPhi', 'RpcSimHits_doubletR', 'RpcSimHits_doubletZ', 'RpcSimHits_gasGap',
         'RpcSimHits_stationEta', 'RpcSimHits_stationPhi', 'RpcSimHits_stationIndex', 'RpcSimHitsLocalPosX',
         'RpcSimHitsLocalPosY', 'RpcSimHitsLocalPosZ', 'RpcSimHitsGlobalTime', 'RpcSimHitsGlobPosX',
-        'RpcSimHitsGlobPosY', 'RpcSimHitsGlobPosZ', 'RpcSimHits_measuresPhi', 'RpcSimHits_strip', 'RpcSimHitsPdgId', 'eventNumber'
+        'RpcSimHitsGlobPosY', 'RpcSimHitsGlobPosZ', 'RpcSimHits_measuresPhi', 'RpcSimHits_strip', 'RpcSimHitsPdgId'
     ]
 
     df = ROOT.RDataFrame(tree_name, input_path)
@@ -150,7 +149,7 @@ def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOne
     event_displacement = []
 
     # Go through each data point
-    for i, rvec in enumerate(data['RpcSimHitsGlobPosX']):
+    for i, rvec in enumerate(data['eventNumber']):
         if i > 100000:
             break # Limit of 100k values
         if not (i%1000): # Print index every 1k values
@@ -175,12 +174,16 @@ def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOne
         truth_vertex_Z = np.asarray(data['TruthVertexZ'][i])
 
         station_eta = data['MdtSimHits_stationEta'][i]
-        station_eta = [int.from_bytes(x.encode('latin-1'), 'big',signed=True) for x in station_eta]
+        try:
+            arr = np.array(list(station_eta), dtype=np.int8) # working conversion for dark photon samples
+        except TypeError as err:
+            arr = rvec_signedchar_to_numpy(station_eta) # working conversion for muon gun samples
+        station_eta = arr.tolist()
         mask_station_eta = np.isin(np.asarray(station_eta), [-7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7])
         station_index = data['MdtSimHits_stationIndex'][i]
-        station_index = [int.from_bytes(x.encode(), 'little') for x in station_index] 
+        station_index = station_index.view(np.uint8)
         station_phi = data['MdtSimHits_stationPhi'][i]
-        station_phi = [int.from_bytes(x.encode(), 'big') for x in station_phi]
+        station_phi = station_phi.view(np.uint8)
         mask_station_index = np.isin(np.asarray(station_index), [0, 1, 2, 3, 4, 5])
         mask_signal = (np.abs(np.asarray(data['MdtSimHitsPdgId'][i])) == 13)
         final_mask = mask_station_eta & mask_station_index & mask_signal 
@@ -209,20 +212,24 @@ def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOne
         for name in event_variables:
             name_dict = name.split("_")[-1]
             values = data[name][i]
-            if type(values) == cppyy.gbl.ROOT.VecOps.RVec['signed char']:
-                values = [int.from_bytes(x.encode('latin-1'), 'big', signed=True) for x in values]
-            if type(values) == cppyy.gbl.ROOT.VecOps.RVec['unsigned char']:
-                values = [int.from_bytes(x.encode(), 'little') for x in values]
+            if type(values) == type(data['MdtSimHits_stationEta'][i]):
+                try:
+                    arr_values = np.array(list(values), dtype=np.int8)
+                except TypeError as err:
+                    arr_values = rvec_signedchar_to_numpy(values)
+                values = arr_values.tolist()
+            if type(values) == type(data['MdtSimHits_stationIndex'][i]):
+                values = values.view(np.uint8)
             if onlyOneSector:
                 filtered_values = np.asarray(values)[final_mask]
                 event[name_dict] = np.asarray(filtered_values)
             else:
                 event[name_dict] = np.asarray(values)
         
-        event['eventNumber'] = int(data['eventNumber'][i])
+        event['eventNumber'] = event_number
 
         tubeNumber = data['MdtSimHits_tube'][i]
-        tubeNumber = [int.from_bytes(x.encode(), 'little') for x in tubeNumber]
+        tubeNumber = tubeNumber.view(np.uint8)
         stationIndex = station_index
         stationEta = station_eta
         stationPhi = station_phi
@@ -276,15 +283,10 @@ def process_events(input_path, output_path, generate_bkg, max_events=10, onlyOne
             event = generate_bkg_hit(event)
         events.append(event)
         event_displacement.append(displacement)
-    
-    # Under-sample the data for training - comment line to remove under-sampling process for validation data 
-    events = downsample(events,0.5) 
+ 
     print("---------------------------------------------------------------------------------------------------------------------------------------------")
     print("len(events) = ", len(events))
     save_events_to_hdf5(events, output_path)
-
-    # Saving calculated displacement values in a dedicated local file
-    np.savez("displacement.npz",displacement=np.array(event_displacement))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process ROOT files and save to HDF5.")
@@ -296,4 +298,4 @@ if __name__ == "__main__":
     MDT_ns2TDC = 25/32
     MDT_resTDC = 0.5
     tool = MdtDigitizationTool(MDT_ns2TDC, MDT_resTDC)
-    process_events(args.input, args.output, args.generate_bkg)
+    process_events(args.input, args.output, args.generate_bkg, dark_photon_mask=args.mask_photon)
