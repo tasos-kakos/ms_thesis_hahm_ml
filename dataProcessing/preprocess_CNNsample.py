@@ -1015,20 +1015,22 @@ def preprocess_data(event, barrel_index, phi_station, eta_pos_index, eta_region)
 
 def merge_data_and_background(events, background):
     """
-    Merges the data from real background events into the data of simulated events
-    Requires len(background) >= len (events)
+    Merges the data from real background events into the data of simulated events.
     events - array containing simulated events images
     background - array containing real background images
     """
-    for i in range(len(events)):
+    if len(background) < len(events):
+        length = len(background)
+    else: 
+        length = len(events)
+    for i in range(length):
         events[i][events[i]==0] = background[i][events[i]==0]
     events = np.array(events)
     return events
 
 def merge_data_and_muons(events, muons, events_labels, muon_labels, eta_station, muon_eta_station, label_single = False):
     """
-    Merges the data from single muons coming from muon gun samples into the data of simulated events
-    Requires len(muons) >= len(events)
+    Merges the data from single muons coming from muon gun samples into the data of simulated events.
     events - array containing simulated events images
     muons - array containing single muon events images
     events_labels - array conatining label images
@@ -1038,6 +1040,10 @@ def merge_data_and_muons(events, muons, events_labels, muon_labels, eta_station,
     label_single - If true, label also single muons when merging with event images
     """
     plot_labels = np.copy(events_labels) # a copy of the label images, but to be filled with entries of 2 for the single-muons mainly for plotting reasons
+    if len(muons) < len(events):
+        length = len(muons)
+    else: 
+        length = len(events)
     for i in range(len(events)):
         events[i][events[i]==0] = muons[i][events[i]==0]
         eta_station[i][eta_station[i]==0] = muon_eta_station[i][eta_station[i]==0]
