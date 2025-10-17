@@ -1,5 +1,5 @@
 import ROOT
-ROOT.gSystem.Load('libRVecSignedChar.so') # Load necessary RVec dictionaries
+ROOT.gSystem.Load('../build/libRVecSignedChar.so') # Load necessary RVec dictionaries
 import numpy as np
 import h5py
 import sys
