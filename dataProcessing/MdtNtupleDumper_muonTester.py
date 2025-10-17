@@ -1,5 +1,5 @@
 import ROOT
-ROOT.gSystem.Load('libRVecSignedChar.so') # Load necessary dictionaries
+ROOT.gSystem.Load('../build/libRVecSignedChar.so') # Load necessary ROOT dictionary
 import numpy as np
 import h5py
 import cppyy
