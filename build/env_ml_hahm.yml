@@ -1,0 +1,28 @@
+name: env_ms_hahm_thesis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Conda packages
+  - python=3.11
+  - numpy=2.3.3
+  - scipy=1.16.2
+  - pandas=2.3.3
+  - scikit-learn=1.7.2
+  - matplotlib
+  - h5py
+  - pillow
+  - joblib
+  - root=6.36.04
+  - pyyaml
+  - pip
+
+  # Pip packages
+  - pip:
+      - "tensorflow[and-cuda]==2.20.0"
+      - "keras==3.11.3"
+      - "hls4ml==1.1.0"
+      - "tqdm==4.67.1"
+      - "rich==14.2.0"
+
+
