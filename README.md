@@ -30,8 +30,9 @@ These are explained below:
 | `models`          | Contains training scripts for the ML models of the analysis.                                 |
 | `hls`             | Scripts to convert Keras models to HLS and compare performance                               |
 | `plotting`        | Scripts for data visualization and performance evaluation production plots                   |
+| `build`           | Scripts required to build the project environment and necessary ROOT dictionaries            |
 
-Below a description of the contained scripts is provided.
+Below a description of the contained python scripts is provided.
 
 | Script             | Description                                                                                  |
 |--------------------|----------------------------------------------------------------------------------------------|
@@ -47,11 +48,30 @@ Below a description of the contained scripts is provided.
 | `hls_RNN.py`                   | Script produced through <a href="https://fastmachinelearning.org/hls4ml/">*hls4ml*<a/>. Takes the trained Keras model, converts it to HLS and uses another `.npz` input file, which serves as a separate validation set to compare performance between the two RNN model versions. |
 
 # How to use
-## Step 1: Sample Generation
+## Step 1: Build project environment
+In order to be able to run the sripts of this repository, the necessary dependencies need to be installed. The original project runs on `lxplus`, but for reproducibility across any system, this repo contains a configuration file `env_ml_hahm.yml`. Assuming one has `conda` installed, the project environment can be created by executing the following command from the `build` directory:
+```bash
+   conda env create -f env_ml_hahm.yml --name my_env 
+```
+The `--name` flag is optional. If executed without it, the created environment will be named using the default name, i.e. `env_ms_hahm_thesis`.
+<br>This will take some time to run. Once completed, activate the environment using the provided name by executing:</br>
+```bash
+   conda activate my_env
+```
+
+## Step 2: Build the necessary ROOT dictionaries
+For the purposes of this analysis, the ROOT interpreter should have access to a dictionary containing the necessary vector mappings. This will allow for the different vector types contained in the branches of the TTrees that the `.root` files consist of to be read properly and the dataframe for the analysis to be created succesfully. To build the dictionary execute the following from the `build` directory:
+```bash
+   chmod +x build_rvec_dict.sh
+   ./build_rvec_dict.sh
+```
+If build succeeds, the dictionary is ready tobe used by the ntuple dumpers!
+
+## Step 3: Sample Generation
 Detailed description of the sample generation process used, cannot be provided publicly due to being CERN property.
 <br>It can, however, be stated that ATHENA was used to extract ntuples of simulated HAHM and muon-gun data and ATLAS Run3 data were used to infuse background noise.</br>
 
-## Step 2: Data processing
+## Step 4: Data processing
 After obtaining the raw `.root` files containing HAHM, muon-gun or real background data one may proceed with the data processing and formatting to be used by the ML models. First, one needs to pass the `.root` files through the dumper scripts. An example usage of the dumper scripts would be:
 - For the HAHM process data:<br>```python MdtNtupleDumper_sim.py --input my_HAHM_input.root --output my_HAHM_output.h5```</br>
 - For the muon-gun data:<br>```python MdtNtupleDumper_sim.py --input my_mg_input.root --output my_mg_output.h5 --mask_photon```</br>
@@ -87,7 +107,7 @@ An example command to build the RNN input of a selected `.h5` data sample would 
 
 The command above produces RNN input data given an HAHM process sample, a backround sample and a muon gun sample with prompt muon hits. There are additional (optional arguments), such as `--ratio`, which works identically to that of of the CNN script and<br>`--excludeprompt` to prevent labelling of prompt muons as 1.</br>
 
-## Step 3: Input data visualization (optional, but recommended):
+## Step 5: Input data visualization (optional, but recommended):
 After obtaining the inputs for the ML models, one could proceed with a visualization to ensure inputs are of proper shape and contain information that reflects their data.
 
 This can be done by running the `CNN_image_plotting.py` script and specifying the dark photon mass in GeV, as well as its average lifetime in mm (according to the sample). An example usage would be:
@@ -96,7 +116,7 @@ This can be done by running the `CNN_image_plotting.py` script and specifying th
 ```
 There are two additional (optional) arguments to be passed: `--events`, a list of event images that one wants to save in `.png` format, and `--num_graphs` which determines the number of graphs (images) to be plotted.
 
-## Step 4: Neural network training and testing
+## Step 6: Neural network training and testing
 After obtaining the neural network inputs, one can tune the `CNN.py` and `RNN.py` scripts according to their needs, train and test their algorithms. There is also an option to apply a displacement threshold cut, in case one wants to restrict the analysis on displacement values above the threshold value. This option is exclusive to the CNN. The threshold cut for the RNN is applied when choosing to exclude prompt muon labelling during preprocessing.
 
 To train and test a CNN, while also saving the trained model, one can run:
@@ -122,7 +142,7 @@ To evaluate the performance of the CNN, one can run the `Plot_CNN_results.py` us
 ```bash
    python Plot_CNN_results.py --input my_CNN_results.npz --mass <dark_photon_mass_in_GeV> --lifetime <dark_photon_average_lifetime> 
 ```
-## Step 5: HLS conversion
+## Step 7: HLS conversion
 
 To convert the trained model to the HLS version run the corresponding HLS script using as input a separate validation `.npz` data file, as well as the trained Keras model `.h5` file. The output is the results of the converted model on the validation dataset.
 
