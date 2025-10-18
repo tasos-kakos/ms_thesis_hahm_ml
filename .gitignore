@@ -1,0 +1,26 @@
+# Compiled source #
+###################
+*.npz
+eos
+*.cxx
+*.so
+*.h5
+*.csv
+*.save
+*.dec
+*.dat
+*.DEC
+*.root
+*.txt
+*.MeV
+*.xml
+*.log
+*.pickle
+*.lhe
+*.pdt
+*.generate
+*.gz
+*.json
+*.events
+*.table
+*.ipynb_checkpoints
