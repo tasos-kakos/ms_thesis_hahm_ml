@@ -65,7 +65,7 @@ For the purposes of this analysis, the ROOT interpreter should have access to a 
    chmod +x build_rvec_dict.sh
    ./build_rvec_dict.sh
 ```
-If build succeeds, the dictionary is ready tobe used by the ntuple dumpers!
+If build succeeds, the dictionary is ready to be used by the ntuple dumpers!
 
 ## Step 3: Sample Generation
 Detailed description of the sample generation process used, cannot be provided publicly due to being CERN property.
