@@ -1,7 +1,7 @@
 # Displaced Muon Detection Using Machine Learning: <br>ATLAS L0 Muon Trigger Upgrade</br>
 A repository with the main python scripts used for the master thesis: <br><a href="https://uu.diva-portal.org/smash/record.jsf?aq2=%5B%5B%5D%5D&c=4&af=%5B%5D&searchType=LIST_LATEST&sortOrder2=title_sort_asc&language=sv&pid=diva2%3A1979429&aq=%5B%5B%5D%5D&sf=all&aqe=%5B%5D&sortOrder=author_sort_asc&onlyFullText=false&noOfRows=50&dswid=8170">Displaced Muon Detection Using Machine Learning: ATLAS L0 Muon Trigger Upgrade</a></br>
 
-### DESCLAIMER
+### DΙSCLAIMER
 These files are parts of the broader repository managed and maintained by the <a href="https://nextgentriggers.web.cern.ch/t22/">NextGenTriggers (NGT) WP2 T2.2: Enhancing the Level-0 Muon Trigger</a> project group at CERN.
 
 In this repository only the scripts written and maintained by the author of the aforementioned thesis are provided due to confidentiality reasons.  To better understand the ideas behind the project approach, please read the thesis document.
